@@ -1,0 +1,22 @@
+Project Instructions
+
+You may pick any project from Kaggle.com (or any other similar source) related to deep learning. You may use third party libraries or code, but you must put a fair amount of effort into this project and understand any function you use.
+The project must include a report that you wrote in English (i.e., no ChatGPT etc.) with the following sections. The documents (not the code) must be in pdf or word format (i.e., not Jupyter notepad)):
+1.	A paragraph describing the goal of your work. Include a description of your dataset, the features and the label you will be predicting – is it a classification problem or a regression problem (or anything else)? Note that the features must be numbers. How you split train and test.
+
+2.	A description of the execution of the simplest baseline, such as a “model” always predicting the majority class (in a classification problem), or the average label in a regression problem. Accuracy, precision and recall for classification and mean squared error and mean absolute error for regression.
+
+
+3.	A description of an execution of linear regression / logistic regression or softmax along with the results (compare them to the baseline).
+
+4.	A description of an execution of a simple most basic fully connected neural network along with the results (compare them to the above).
+
+
+5.	A more advanced network using anything more advanced such as word embeddings, recurrent neural networks, transformers, convolutional layers etc. Compare to the above.
+
+In each of the above (except 1 and 2) describe any initial attempts, and how you have corrected them to improve your results (including loss, train error and validation error, overfitting, underfitting). + screenshots (of your console or plots) + code. Make sure to split the data into a train and test set (and validation set if required).
+
+Do not write your report as a story (try avoiding first person viewpoint and subjective case).
+You will need to print your report and bring it with you to the presentation.
+Presentation: you will be presenting your projects at our last class (19-20.1.25) or at the week before that (12-13.1.25). It’s best to use PowerPoint (or similar) presentation slides. Note that you will be asked general questions on the course material during the presentation.
+Good luck!
