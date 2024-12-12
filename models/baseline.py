@@ -10,10 +10,18 @@ transform = transforms.Compose([
     transforms.ToTensor(),
 ])
 
-# 2. Construct the path to the dataset
-# Assuming 'baseline.py' is located in 'ML/models/', we navigate up one directory to 'ML/'
-# and then into 'data/carBikeDataset/' which contains 'Bike' and 'Car' subdirectories.
-data_dir = r"C:\Users\HP\PycharmProjects\MachineLearningFinalProject\data\Car-Bike-Dataset"
+# 2. Construct the path to the dataset dynamically
+# Get the current working directory
+current_path = os.getcwd()
+
+# Build the dataset path relative to the current working directory
+# Assuming the dataset is in 'data/Car-Bike-Dataset'
+data_dir = os.path.join(current_path, "..", "data", "Car-Bike-Dataset")
+
+
+# Check if the dataset directory exists
+if not os.path.exists(data_dir):
+    raise FileNotFoundError(f"Dataset directory not found: {data_dir}")
 
 # 3. Load the dataset using ImageFolder
 dataset = datasets.ImageFolder(root=data_dir, transform=transform)
