@@ -1,10 +1,10 @@
-import os
 import numpy as np
 from PIL import Image
 from sklearn.model_selection import train_test_split
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torch import nn, optim
+import os
 
 # Define the dataset path
 current_path = os.getcwd()  # Current working directory
@@ -76,14 +76,13 @@ class SimpleNN(nn.Module):
         super(SimpleNN, self).__init__()
         self.fc = nn.Sequential(
             nn.Linear(784, 128),
-            nn.BatchNorm1d(128),   # Add batch normalization
             nn.ReLU(),
-            nn.Dropout(0.5),       # Add dropout for regularization
             nn.Linear(128, 128),
-            nn.BatchNorm1d(128),
             nn.ReLU(),
-            nn.Dropout(0.5),
-            nn.Linear(128, 2)      # Output layer for 2 classes (Bike, Car)
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, 2),  # Output layer for 2 classes (Bike, Car)
+            nn.Softmax(dim=1)
         )
 
     def forward(self, x):
@@ -92,11 +91,10 @@ class SimpleNN(nn.Module):
 # Initialize the model, loss function, and optimizer
 model = SimpleNN()
 criterion = nn.CrossEntropyLoss()  # Cross-entropy loss for multi-class classification
-optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)  # Add momentum for better convergence
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)  # Learning rate scheduler
+optimizer = optim.SGD(model.parameters(), lr=0.001)
 
 # Training loop
-def train(model, loader, criterion, optimizer, scheduler, epochs=10):
+def train(model, loader, criterion, optimizer, epochs=10):
     for epoch in range(epochs):
         model.train()
         total_loss = 0
@@ -107,8 +105,7 @@ def train(model, loader, criterion, optimizer, scheduler, epochs=10):
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
-        scheduler.step()  # Adjust the learning rate
-        print(f"Epoch {epoch+1}/{epochs}, Training Loss: {total_loss / len(loader):.4f}")
+        print(f"Epoch {epoch+1}/{epochs}, Loss: {total_loss / len(loader):.4f}")
 
 # Validation loop
 def validate(model, loader, criterion):
@@ -126,11 +123,7 @@ def validate(model, loader, criterion):
     print(f"Validation Loss: {total_loss / len(loader):.4f}, Accuracy: {accuracy:.4f}")
 
 # Train the model
-train(model, train_loader, criterion, optimizer, scheduler, epochs=10)
+train(model, train_loader, criterion, optimizer, epochs=10)
 
 # Evaluate the model on the test set
 validate(model, test_loader, criterion)
-
-# Save the trained model
-torch.save(model.state_dict(), "simple_nn.pth")
-print("Model saved to simple_nn.pth")
