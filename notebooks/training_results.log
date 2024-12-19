@@ -1,0 +1,29 @@
+--** this is the result for the MultylayerNeuralNetworks.py run **--
+Epoch 1/10, Training Loss: 0.6786
+Epoch 2/10, Training Loss: 0.6472
+Epoch 3/10, Training Loss: 0.6250
+Epoch 4/10, Training Loss: 0.6052
+Epoch 5/10, Training Loss: 0.5866
+Epoch 6/10, Training Loss: 0.5693
+Epoch 7/10, Training Loss: 0.5537
+Epoch 8/10, Training Loss: 0.5393
+Epoch 9/10, Training Loss: 0.5262
+Epoch 10/10, Training Loss: 0.5145
+Validation Loss: 0.5097, Accuracy: 0.7438
+Validation Loss: 0.5097, Accuracy: 0.7550
+Model saved to C:\Users\HP\PycharmProjects\MachineLearningFinalProject\models\..\notebooks\simple_nn.pth
+
+
+-------------------------------------------------------[Advanced Model] Epoch 1/10, Training Loss: 0.5027
+[Advanced Model] Epoch 2/10, Training Loss: 0.3861
+[Advanced Model] Epoch 3/10, Training Loss: 0.3128
+[Advanced Model] Epoch 4/10, Training Loss: 0.2531
+[Advanced Model] Epoch 5/10, Training Loss: 0.2129
+[Advanced Model] Epoch 6/10, Training Loss: 0.1713
+[Advanced Model] Epoch 7/10, Training Loss: 0.1264
+[Advanced Model] Epoch 8/10, Training Loss: 0.1101
+[Advanced Model] Epoch 9/10, Training Loss: 0.0906
+[Advanced Model] Epoch 10/10, Training Loss: 0.0821
+[Advanced Model] Validation Loss: 0.5803, Accuracy: 0.8450
+[Advanced Model] Validation Loss: 0.4506, Accuracy: 0.8550
+[Advanced Model] Model saved to C:\Users\HP\PycharmProjects\MachineLearningFinalProject\models\..\notebooks\advanced_nn.pth

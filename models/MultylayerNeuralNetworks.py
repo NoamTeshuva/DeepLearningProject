@@ -146,6 +146,6 @@ if use_validation and val_loader is not None:
 validate(model, test_loader, criterion)
 
 # Save the trained model
-model_path = os.path.join(current_path, "notebooks", "simple_nn.pth")
+model_path = os.path.join(current_path, "..", "notebooks", "simple_nn.pth")
 torch.save(model.state_dict(), model_path)
 log_results(f"Model saved to {model_path}")
