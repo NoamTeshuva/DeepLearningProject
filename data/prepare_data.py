@@ -7,50 +7,41 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 import random
 
-# Set labels to images 
-def load_and_preprocess_images(dataset_path, augment=True):
-    # Define class labels
+# Set labels to images
+def load_and_preprocess_images(dataset_path, augment=True, image_size=(100, 75)):
     class_folders = {'Bike': 0, 'Car': 1}
     all_images = []
     all_labels = []
 
-    # Iterate through the folders and process images
     for class_name, label in class_folders.items():
         folder_path = os.path.join(dataset_path, class_name)
         if not os.path.exists(folder_path):
             raise FileNotFoundError(f"Folder not found: {folder_path}")
-        
+
         for image_name in os.listdir(folder_path):
             image_path = os.path.join(folder_path, image_name)
             img = cv2.imread(image_path)
             if img is None:
-                continue  # Skip if the image couldn't be loaded
-            
-            img = cv2.resize(img, (300, 200))
+                continue
+
+            # Resize and grayscale
+            img = cv2.resize(img, image_size)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            
+
             all_images.append(img)
             all_labels.append(label)
 
             if augment:
-                aug_image = img.copy()
-                 # Random horizontal flip
                 if random.random() > 0.5:
-                    img = cv2.flip(img, 1)  # Flip horizontally
-                
-                # Random rotation
-                angle = random.randint(-30, 30)
-                matrix = cv2.getRotationMatrix2D((150, 100), angle, 1)
-                img = cv2.warpAffine(img, matrix, (300, 200))
-                
-                all_images.append(aug_image)
+                    img = cv2.flip(img, 1)
+                angle = random.randint(-15, 15)  # Smaller rotation
+                matrix = cv2.getRotationMatrix2D((image_size[0] // 2, image_size[1] // 2), angle, 1)
+                img = cv2.warpAffine(img, matrix, image_size)
+                all_images.append(img)
                 all_labels.append(label)
 
-    # Convert lists to numpy arrays
-    images = np.array(all_images)
-    labels = np.array(all_labels)
+    return np.array(all_images, dtype='float32'), np.array(all_labels)
 
-    return images, labels
 
 # Devide the data to train and test, reshape, normalized and PCAed the data
 def preprocess_data_without_validation(dataset_path, test_size=0.2, pca_components=50):

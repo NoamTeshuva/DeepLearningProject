@@ -1,56 +1,58 @@
+import sys
 import os
-import numpy as np
-from PIL import Image
-from sklearn.model_selection import train_test_split
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torch import nn, optim
+import sys
+import os
+
+# Dynamically add the `data` folder to the system path
+current_path = os.getcwd()  # Current working directory
+data_folder = os.path.join(current_path, "..", "data")  # Adjust the relative path to the data folder
+sys.path.append(data_folder)  # Add the data folder to the system path
+
+
+from prepare_data import preprocess_data_with_validation, preprocess_data_without_validation
+
+
+# Path to save the log file
+# Path to save the log file
+log_file_path = os.path.join(current_path, "..", "notebooks", "training_results.log")
+
+
+# Function to append results to the log file
+def log_results(message, log_file_path=log_file_path):
+    with open(log_file_path, "a") as f:
+        f.write(message + "\n")
+    print(message)  # Also print to console
+
 
 # Define the dataset path
-current_path = os.getcwd()  # Current working directory
-data_dir = os.path.join(current_path, "..", "data", "Car-Bike-Dataset")
+data_dir = os.path.join(data_folder, "Car-Bike-Dataset")
 
-# Paths for bike and car subdirectories
-bike_path = os.path.join(data_dir, "Bike")
-car_path = os.path.join(data_dir, "Car")
+# Choose between preprocessing with or without validation
+use_validation = True  # Set to False if you do not need a validation set
 
-# Function to read and preprocess images and labels
-def read_images_and_labels(path, label):
-    images = []
-    labels = []
-    for image_name in os.listdir(path):
-        image_path = os.path.join(path, image_name)
-        try:
-            # Open image, resize to 28x28, and convert to grayscale
-            img = Image.open(image_path).convert("L").resize((28, 28))  # Grayscale and resize
-            images.append(np.array(img))
-            labels.append(label)
-        except Exception as e:
-            print(f"Error loading image {image_path}: {e}")
-    return np.array(images), np.array(labels)
-
-# Load data from Bike and Car folders
-bike_images, bike_labels = read_images_and_labels(bike_path, label=0)
-car_images, car_labels = read_images_and_labels(car_path, label=1)
-
-# Combine data
-images = np.concatenate((bike_images, car_images), axis=0)
-labels = np.concatenate((bike_labels, car_labels), axis=0)
-
-# Normalize image data and flatten (e.g., 28x28 -> 784)
-images = images.reshape(images.shape[0], -1).astype('float32') / 255.0  # Normalize to [0, 1]
-
-# Split data into train (70%), validation (15%), and test (15%)
-train_images, temp_images, train_labels, temp_labels = train_test_split(images, labels, test_size=0.3, random_state=42)
-val_images, test_images, val_labels, test_labels = train_test_split(temp_images, temp_labels, test_size=0.5, random_state=42)
+if use_validation:
+    train_images, val_images, test_images, train_labels, val_labels, test_labels = preprocess_data_with_validation(
+        dataset_path=data_dir, validation_size=0.2, test_size=0.5, pca_components=50
+    )
+else:
+    train_images, test_images, train_labels, test_labels = preprocess_data_without_validation(
+        dataset_path=data_dir, test_size=0.2, pca_components=50
+    )
+    val_images, val_labels = None, None  # No validation set in this case
 
 # Convert data to PyTorch tensors
 train_images = torch.tensor(train_images, dtype=torch.float32)
 train_labels = torch.tensor(train_labels, dtype=torch.long)
-val_images = torch.tensor(val_images, dtype=torch.float32)
-val_labels = torch.tensor(val_labels, dtype=torch.long)
 test_images = torch.tensor(test_images, dtype=torch.float32)
 test_labels = torch.tensor(test_labels, dtype=torch.long)
+
+if use_validation:
+    val_images = torch.tensor(val_images, dtype=torch.float32)
+    val_labels = torch.tensor(val_labels, dtype=torch.long)
+
 
 # Define a custom PyTorch Dataset
 class BikeCarDataset(Dataset):
@@ -64,39 +66,44 @@ class BikeCarDataset(Dataset):
     def __getitem__(self, idx):
         return self.images[idx], self.labels[idx]
 
+
 # Create DataLoaders
 batch_size = 32
 train_loader = DataLoader(BikeCarDataset(train_images, train_labels), batch_size=batch_size, shuffle=True)
-val_loader = DataLoader(BikeCarDataset(val_images, val_labels), batch_size=batch_size, shuffle=False)
 test_loader = DataLoader(BikeCarDataset(test_images, test_labels), batch_size=batch_size, shuffle=False)
+
+if use_validation:
+    val_loader = DataLoader(BikeCarDataset(val_images, val_labels), batch_size=batch_size, shuffle=False)
+else:
+    val_loader = None
+
 
 # Define the neural network
 class SimpleNN(nn.Module):
-    def __init__(self):
+    def __init__(self, input_dim=50):  # Input dimension matches PCA components
         super(SimpleNN, self).__init__()
         self.fc = nn.Sequential(
-            nn.Linear(784, 128),
-            nn.BatchNorm1d(128),   # Add batch normalization
+            nn.Linear(input_dim, 128),
             nn.ReLU(),
-            nn.Dropout(0.5),       # Add dropout for regularization
             nn.Linear(128, 128),
-            nn.BatchNorm1d(128),
             nn.ReLU(),
-            nn.Dropout(0.5),
-            nn.Linear(128, 2)      # Output layer for 2 classes (Bike, Car)
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, 2),  # Output layer for 2 classes (Bike, Car)
         )
 
     def forward(self, x):
         return self.fc(x)
 
+
 # Initialize the model, loss function, and optimizer
-model = SimpleNN()
+model = SimpleNN(input_dim=50)  # Use 50 components as defined in PCA
 criterion = nn.CrossEntropyLoss()  # Cross-entropy loss for multi-class classification
-optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)  # Add momentum for better convergence
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)  # Learning rate scheduler
+optimizer = optim.SGD(model.parameters(), lr=0.001)
+
 
 # Training loop
-def train(model, loader, criterion, optimizer, scheduler, epochs=10):
+def train(model, loader, criterion, optimizer, epochs=10):
     for epoch in range(epochs):
         model.train()
         total_loss = 0
@@ -107,8 +114,9 @@ def train(model, loader, criterion, optimizer, scheduler, epochs=10):
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
-        scheduler.step()  # Adjust the learning rate
-        print(f"Epoch {epoch+1}/{epochs}, Training Loss: {total_loss / len(loader):.4f}")
+        avg_loss = total_loss / len(loader)
+        log_results(f"Epoch {epoch + 1}/{epochs}, Training Loss: {avg_loss:.4f}")
+
 
 # Validation loop
 def validate(model, loader, criterion):
@@ -122,15 +130,22 @@ def validate(model, loader, criterion):
             total_loss += loss.item()
             predicted = torch.argmax(outputs, dim=1)
             correct += (predicted == labels).sum().item()
+    avg_loss = total_loss / len(loader)
     accuracy = correct / len(loader.dataset)
-    print(f"Validation Loss: {total_loss / len(loader):.4f}, Accuracy: {accuracy:.4f}")
+    log_results(f"Validation Loss: {avg_loss:.4f}, Accuracy: {accuracy:.4f}")
+
 
 # Train the model
-train(model, train_loader, criterion, optimizer, scheduler, epochs=10)
+train(model, train_loader, criterion, optimizer, epochs=10)
 
-# Evaluate the model on the test set
+# Evaluate on validation set (if available)
+if use_validation and val_loader is not None:
+    validate(model, val_loader, criterion)
+
+# Evaluate on test set
 validate(model, test_loader, criterion)
 
 # Save the trained model
-torch.save(model.state_dict(), "simple_nn.pth")
-print("Model saved to simple_nn.pth")
+model_path = os.path.join(current_path, "notebooks", "simple_nn.pth")
+torch.save(model.state_dict(), model_path)
+log_results(f"Model saved to {model_path}")
