@@ -60,7 +60,7 @@ class BikeCarDataset(Dataset):
         return self.images[idx], self.labels[idx]
 
 # Create DataLoaders
-batch_size = 256
+batch_size = 32
 train_loader = DataLoader(BikeCarDataset(train_images, train_labels), batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(BikeCarDataset(test_images, test_labels), batch_size=batch_size, shuffle=False)
 

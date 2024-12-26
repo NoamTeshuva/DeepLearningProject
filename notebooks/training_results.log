@@ -27,3 +27,58 @@ Model saved to C:\Users\HP\PycharmProjects\MachineLearningFinalProject\models\..
 [Advanced Model] Validation Loss: 0.5803, Accuracy: 0.8450
 [Advanced Model] Validation Loss: 0.4506, Accuracy: 0.8550
 [Advanced Model] Model saved to C:\Users\HP\PycharmProjects\MachineLearningFinalProject\models\..\notebooks\advanced_nn.pth
+--------------------------------
+RNN
+Epoch [1/10], Loss: 0.5928
+Epoch [2/10], Loss: 0.4408
+Epoch [3/10], Loss: 0.4017
+Epoch [4/10], Loss: 0.3604
+Epoch [5/10], Loss: 0.3375
+Epoch [6/10], Loss: 0.2970
+Epoch [7/10], Loss: 0.2742
+Epoch [8/10], Loss: 0.2436
+Epoch [9/10], Loss: 0.2186
+Epoch [10/10], Loss: 0.2070
+Validation Loss: 0.3902, Accuracy: 0.8525
+--------------------------------------
+Cnn with REsNEt
+Epoch [1/10], Loss: 0.4583
+Epoch [2/10], Loss: 0.2449
+Epoch [3/10], Loss: 0.1809
+Epoch [4/10], Loss: 0.1353
+Epoch [5/10], Loss: 0.0877
+Epoch [6/10], Loss: 0.0824
+Epoch [7/10], Loss: 0.0650
+Epoch [8/10], Loss: 0.0415
+Epoch [9/10], Loss: 0.0347
+Epoch [10/10], Loss: 0.0201
+Validation Loss: 0.4045, Accuracy: 0.9263
+--------------------------------------
+
+cnn with batch size 100 optimizer adam
+Epoch [1/10], Loss: 0.6400
+Epoch [2/10], Loss: 0.3936
+Epoch [3/10], Loss: 0.2868
+Epoch [4/10], Loss: 0.2343
+Epoch [5/10], Loss: 0.1946
+Epoch [6/10], Loss: 0.1690
+Epoch [7/10], Loss: 0.1564
+Epoch [8/10], Loss: 0.1291
+Epoch [9/10], Loss: 0.1108
+Epoch [10/10], Loss: 0.1251
+Validation Loss: 0.2639, Accuracy: 0.9125
+
+
+--------------------------------------
+cnn with batch 256
+Epoch [1/10], Loss: 0.4845
+Epoch [2/10], Loss: 0.2360
+Epoch [3/10], Loss: 0.1903
+Epoch [4/10], Loss: 0.1476
+Epoch [5/10], Loss: 0.1237
+Epoch [6/10], Loss: 0.0861
+Epoch [7/10], Loss: 0.0520
+Epoch [8/10], Loss: 0.0457
+Epoch [9/10], Loss: 0.0342
+Epoch [10/10], Loss: 0.0385
+Validation Loss: 0.2484, Accuracy: 0.9400

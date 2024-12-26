@@ -13,12 +13,12 @@ sys.path.append(data_folder)
 from prepare_data import preprocess_data_with_validation, preprocess_data_without_validation
 
 # Define the log file path
-log_file_path = os.path.join(current_path, "..", "notebooks", "cnn_training_results.log")
+log_file_path = os.path.join(current_path, "..", "notebooks", "rnn_training_results.log")
 
 # Function to append results to the log file
 def log_results(message, log_file_path=log_file_path):
     with open(log_file_path, "a") as f:
-        f.write("[CNN Model] " + message + "\n")
+        f.write("[RNN Model] " + message + "\n")
     print(message)  # Also print to console
 
 # Define the dataset path
@@ -38,13 +38,13 @@ else:
     val_images, val_labels = None, None
 
 # Convert data to PyTorch tensors
-train_images = torch.tensor(train_images, dtype=torch.float32).unsqueeze(1)  # Add channel dimension
+train_images = torch.tensor(train_images, dtype=torch.float32)
 train_labels = torch.tensor(train_labels, dtype=torch.long)
-test_images = torch.tensor(test_images, dtype=torch.float32).unsqueeze(1)
+test_images = torch.tensor(test_images, dtype=torch.float32)
 test_labels = torch.tensor(test_labels, dtype=torch.long)
 
 if use_validation:
-    val_images = torch.tensor(val_images, dtype=torch.float32).unsqueeze(1)
+    val_images = torch.tensor(val_images, dtype=torch.float32)
     val_labels = torch.tensor(val_labels, dtype=torch.long)
 
 # Define a custom PyTorch Dataset
@@ -60,7 +60,7 @@ class BikeCarDataset(Dataset):
         return self.images[idx], self.labels[idx]
 
 # Create DataLoaders
-batch_size = 256
+batch_size = 32
 train_loader = DataLoader(BikeCarDataset(train_images, train_labels), batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(BikeCarDataset(test_images, test_labels), batch_size=batch_size, shuffle=False)
 
@@ -69,35 +69,38 @@ if use_validation:
 else:
     val_loader = None
 
-# Define the CNN model
-class CNNClassifier(nn.Module):
-    def __init__(self):
-        super(CNNClassifier, self).__init__()
-        self.conv_layers = nn.Sequential(
-            nn.Conv2d(1, 32, kernel_size=5, stride=1, padding=2),  # Convolutional layer
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2),  # Max pooling
-            nn.Conv2d(32, 64, kernel_size=5, stride=1, padding=2),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2)
-        )
-        self.fc_layers = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(64 * 75 * 50, 256),  # Adjust based on input size
-            nn.ReLU(),
-            nn.Dropout(0.5),
-            nn.Linear(256, 128),
-            nn.ReLU(),
-            nn.Linear(128, 2)  # Output layer for 2 classes
-        )
+# Define the RNN model
+class RNNClassifier(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers, output_size):
+        super(RNNClassifier, self).__init__()
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+
+        # Define RNN layers (using LSTM)
+        self.rnn = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+
+        # Fully connected layer
+        self.fc = nn.Linear(hidden_size, output_size)
 
     def forward(self, x):
-        x = self.conv_layers(x)
-        x = self.fc_layers(x)
-        return x
+        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
+        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
+
+        # Pass through LSTM
+        out, _ = self.rnn(x, (h0, c0))
+
+        # Pass through fully connected layer
+        out = self.fc(out[:, -1, :])
+        return out
+
+# Hyperparameters
+input_size = train_images.shape[1]  # Assuming input features are already flattened
+hidden_size = 128
+num_layers = 2
+output_size = 2  # Number of classes
 
 # Initialize the model, loss function, and optimizer
-model = CNNClassifier()
+model = RNNClassifier(input_size, hidden_size, num_layers, output_size)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
@@ -141,7 +144,7 @@ if use_validation and val_loader is not None:
 validate(model, test_loader, criterion)
 
 # Save the trained model
-model_path = os.path.join(current_path, "..", "notebooks", "cnn_model.pth")
+model_path = os.path.join(current_path, "..", "notebooks", "rnn_model.pth")
 os.makedirs(os.path.dirname(model_path), exist_ok=True)
 torch.save(model.state_dict(), model_path)
 log_results(f"Model saved to {model_path}")
