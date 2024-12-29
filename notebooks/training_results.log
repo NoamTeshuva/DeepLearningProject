@@ -14,7 +14,9 @@ Validation Loss: 0.5097, Accuracy: 0.7550
 Model saved to C:\Users\HP\PycharmProjects\MachineLearningFinalProject\models\..\notebooks\simple_nn.pth
 
 
--------------------------------------------------------[Advanced Model] Epoch 1/10, Training Loss: 0.5027
+-------------------------------------------------------
+MultylayerNeuralNetworksAdvanced.py
+[Advanced Model] Epoch 1/10, Training Loss: 0.5027
 [Advanced Model] Epoch 2/10, Training Loss: 0.3861
 [Advanced Model] Epoch 3/10, Training Loss: 0.3128
 [Advanced Model] Epoch 4/10, Training Loss: 0.2531
@@ -82,3 +84,17 @@ Epoch [8/10], Loss: 0.0457
 Epoch [9/10], Loss: 0.0342
 Epoch [10/10], Loss: 0.0385
 Validation Loss: 0.2484, Accuracy: 0.9400
+
+------------------------------
+using mobile netV2
+Epoch [1/10], Loss: 0.5259
+Epoch [2/10], Loss: 0.2931
+Epoch [3/10], Loss: 0.2166
+Epoch [4/10], Loss: 0.1705
+Epoch [5/10], Loss: 0.1269
+Epoch [6/10], Loss: 0.0797
+Epoch [7/10], Loss: 0.0771
+Epoch [8/10], Loss: 0.0757
+Epoch [9/10], Loss: 0.0457
+Epoch [10/10], Loss: 0.0401
+Validation Loss: 0.2154, Accuracy: 0.9325
