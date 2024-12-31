@@ -1,4 +1,4 @@
-# Machine Learning Final Project
+# Deep Learning Final Project
 
 ## Project Title: Car vs Bike Classification
 
