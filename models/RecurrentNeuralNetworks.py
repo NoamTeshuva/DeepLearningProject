@@ -4,22 +4,15 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
 
 # Add the `data` folder to the system path
 current_path = os.getcwd()
-data_folder = os.path.join(current_path, "..", "data")
+data_folder = os.path.join(current_path, "data")
 sys.path.append(data_folder)
 
-from prepare_data import preprocess_data_with_validation, preprocess_data_without_validation
-
-# Define the log file path
-log_file_path = os.path.join(current_path, "..", "notebooks", "rnn_training_results.log")
-
-# Function to append results to the log file
-def log_results(message, log_file_path=log_file_path):
-    with open(log_file_path, "a") as f:
-        f.write("[RNN Model] " + message + "\n")
-    print(message)  # Also print to console
+from data.prepare_data import preprocess_data_with_validation, preprocess_data_without_validation
 
 # Define the dataset path
 data_dir = os.path.join(data_folder, "Car-Bike-Dataset")
@@ -28,14 +21,37 @@ data_dir = os.path.join(data_folder, "Car-Bike-Dataset")
 use_validation = True
 
 if use_validation:
-    train_images, val_images, test_images, train_labels, val_labels, test_labels = preprocess_data_with_validation(
-        dataset_path=data_dir, validation_size=0.2, test_size=0.5, pca_components=None
-    )
+    train_images, val_images, test_images, train_labels, val_labels, test_labels = preprocess_data_with_validation('data\Car-Bike-Dataset')
+    # Reshape images for Logistic Regression (Flatten 2D images into 1D vectors)
+    train_images = train_images.reshape(train_images.shape[0], -1)
+    val_images = val_images.reshape(val_images.shape[0], -1)
+    test_images = test_images.reshape(test_images.shape[0], -1)
+
+    # Standardize features
+    scaler = StandardScaler()
+    train_images = scaler.fit_transform(train_images)
+    val_images = scaler.transform(val_images)
+    test_images = scaler.transform(test_images)
+
+    # Apply PCA to reduce dimensionality
+    pca = PCA(n_components=50)  # Choose the number of components
+    train_images = pca.fit_transform(train_images)
+    val_images = pca.transform(val_images)
+    test_images = pca.transform(test_images)
 else:
-    train_images, test_images, train_labels, test_labels = preprocess_data_without_validation(
-        dataset_path=data_dir, test_size=0.2, pca_components=None
-    )
-    val_images, val_labels = None, None
+    train_images, test_images, train_labels, test_labels = preprocess_data_without_validation('data\Car-Bike-Dataset')
+    # Reshape images for Logistic Regression (Flatten 2D images into 1D vectors)
+    train_images = train_images.reshape(train_images.shape[0], -1)
+    test_images = test_images.reshape(test_images.shape[0], -1)
+    # Standardize features
+    scaler = StandardScaler()
+    train_images = scaler.fit_transform(train_images)
+    test_images = scaler.transform(test_images)
+    # Apply PCA to reduce dimensionality
+    pca = PCA(n_components=50)  # Choose the number of components
+    train_images_pca = pca.fit_transform(train_images)
+    test_images_pca = pca.transform(test_images)
+    val_images, val_labels = None, None  # No validation set in this case
 
 # Convert data to PyTorch tensors
 train_images = torch.tensor(train_images, dtype=torch.float32)
@@ -109,6 +125,7 @@ def train(model, loader, criterion, optimizer, epochs=10):
         model.train()
         total_loss = 0
         for images, labels in loader:
+            images = images.unsqueeze(1)  # Reshape to (batch_size, sequence_length=1, input_size)
             optimizer.zero_grad()
             outputs = model(images)
             loss = criterion(outputs, labels)
@@ -116,7 +133,7 @@ def train(model, loader, criterion, optimizer, epochs=10):
             optimizer.step()
             total_loss += loss.item()
         avg_loss = total_loss / len(loader)
-        log_results(f"Epoch {epoch + 1}/{epochs}, Training Loss: {avg_loss:.4f}")
+        print(f"Epoch {epoch + 1}/{epochs}, Training Loss: {avg_loss:.4f}")
 
 def validate(model, loader, criterion):
     model.eval()
@@ -124,6 +141,7 @@ def validate(model, loader, criterion):
     correct = 0
     with torch.no_grad():
         for images, labels in loader:
+            images = images.unsqueeze(1)  # Reshape to (batch_size, sequence_length=1, input_size)
             outputs = model(images)
             loss = criterion(outputs, labels)
             total_loss += loss.item()
@@ -131,7 +149,7 @@ def validate(model, loader, criterion):
             correct += (predicted == labels).sum().item()
     avg_loss = total_loss / len(loader)
     accuracy = correct / len(loader.dataset)
-    log_results(f"Validation Loss: {avg_loss:.4f}, Accuracy: {accuracy:.4f}")
+    print(f"Validation Loss: {avg_loss:.4f}, Accuracy: {accuracy:.4f}")
 
 # Train the model
 train(model, train_loader, criterion, optimizer, epochs=10)
@@ -144,7 +162,7 @@ if use_validation and val_loader is not None:
 validate(model, test_loader, criterion)
 
 # Save the trained model
-model_path = os.path.join(current_path, "..", "notebooks", "rnn_model.pth")
+model_path = os.path.join(current_path, "notebooks", "rnn_model.pth")
 os.makedirs(os.path.dirname(model_path), exist_ok=True)
 torch.save(model.state_dict(), model_path)
-log_results(f"Model saved to {model_path}")
+print(f"Model saved to {model_path}")

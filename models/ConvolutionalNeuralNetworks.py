@@ -7,19 +7,11 @@ from torch.utils.data import Dataset, DataLoader
 
 # Add the `data` folder to the system path
 current_path = os.getcwd()
-data_folder = os.path.join(current_path, "..", "data")
+data_folder = os.path.join(current_path, "data")
 sys.path.append(data_folder)
 
-from prepare_data import preprocess_data_with_validation, preprocess_data_without_validation
+from data.prepare_data import preprocess_data_without_validation, preprocess_data_with_validation
 
-# Define the log file path
-log_file_path = os.path.join(current_path, "..", "notebooks", "cnn_training_results.log")
-
-# Function to append results to the log file
-def log_results(message, log_file_path=log_file_path):
-    with open(log_file_path, "a") as f:
-        f.write("[CNN Model] " + message + "\n")
-    print(message)  # Also print to console
 
 # Define the dataset path
 data_dir = os.path.join(data_folder, "Car-Bike-Dataset")
@@ -29,11 +21,11 @@ use_validation = True
 
 if use_validation:
     train_images, val_images, test_images, train_labels, val_labels, test_labels = preprocess_data_with_validation(
-        dataset_path=data_dir, validation_size=0.2, test_size=0.5, pca_components=None
+        dataset_path=data_dir, validation_size=0.2, test_size=0.5
     )
 else:
     train_images, test_images, train_labels, test_labels = preprocess_data_without_validation(
-        dataset_path=data_dir, test_size=0.2, pca_components=None
+        dataset_path=data_dir, test_size=0.2
     )
     val_images, val_labels = None, None
 
@@ -113,7 +105,7 @@ def train(model, loader, criterion, optimizer, epochs=10):
             optimizer.step()
             total_loss += loss.item()
         avg_loss = total_loss / len(loader)
-        log_results(f"Epoch {epoch + 1}/{epochs}, Training Loss: {avg_loss:.4f}")
+        print(f"Epoch {epoch + 1}/{epochs}, Training Loss: {avg_loss:.4f}")
 
 def validate(model, loader, criterion):
     model.eval()
@@ -128,7 +120,7 @@ def validate(model, loader, criterion):
             correct += (predicted == labels).sum().item()
     avg_loss = total_loss / len(loader)
     accuracy = correct / len(loader.dataset)
-    log_results(f"Validation Loss: {avg_loss:.4f}, Accuracy: {accuracy:.4f}")
+    print(f"Validation Loss: {avg_loss:.4f}, Accuracy: {accuracy:.4f}")
 
 # Train the model
 train(model, train_loader, criterion, optimizer, epochs=10)
@@ -141,7 +133,7 @@ if use_validation and val_loader is not None:
 validate(model, test_loader, criterion)
 
 # Save the trained model
-model_path = os.path.join(current_path, "..", "notebooks", "cnn_model.pth")
+model_path = os.path.join(current_path, "notebooks", "cnn_model.pth")
 os.makedirs(os.path.dirname(model_path), exist_ok=True)
 torch.save(model.state_dict(), model_path)
-log_results(f"Model saved to {model_path}")
+print(f"Model saved to {model_path}")
