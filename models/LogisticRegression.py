@@ -4,6 +4,8 @@ import torch.nn as nn
 from data.prepare_data import preprocess_data_with_validation, preprocess_data_without_validation
 import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
 import seaborn as sns  # For better visualization of the confusion matrix
 
 # Run this by: python -m models.LogisticRegression
@@ -18,9 +20,37 @@ class LogisticRegressionModel(nn.Module):
         return torch.sigmoid(self.linear(x))
 
 # Load preprocessed data
-# train_images, test_images, train_labels, test_labels = prepare_data.preprocess_data_without_validation('dataset')
+# train_images, test_images, train_labels, test_labels = prepare_data.preprocess_data_without_validation('data\Car-Bike-Dataset')
+ # Reshape images for Logistic Regression (Flatten 2D images into 1D vectors)
+# train_images = train_images.reshape(train_images.shape[0], -1)
+# test_images = test_images.reshape(test_images.shape[0], -1)
+# # Standardize features
+# scaler = StandardScaler()
+# train_images = scaler.fit_transform(train_images)
+# test_images = scaler.transform(test_images)
+# # Apply PCA to reduce dimensionality
+# pca = PCA(n_components=50)  # Choose the number of components
+# train_images_pca = pca.fit_transform(train_images)
+# test_images_pca = pca.transform(test_images)
+
 # Load data with validation
 train_images, val_images, test_images, train_labels, val_labels, test_labels = preprocess_data_with_validation('data\Car-Bike-Dataset')
+# Reshape images for Logistic Regression (Flatten 2D images into 1D vectors)
+train_images = train_images.reshape(train_images.shape[0], -1)
+val_images = val_images.reshape(val_images.shape[0], -1)
+test_images = test_images.reshape(test_images.shape[0], -1)
+
+# Standardize features
+scaler = StandardScaler()
+train_images = scaler.fit_transform(train_images)
+val_images = scaler.transform(val_images)
+test_images = scaler.transform(test_images)
+
+# Apply PCA to reduce dimensionality
+pca = PCA(n_components=50)  # Choose the number of components
+train_images = pca.fit_transform(train_images)
+val_images = pca.transform(val_images)
+test_images = pca.transform(test_images)
 
 # Convert NumPy arrays to PyTorch tensors
 train_images_tensor = torch.tensor(train_images, dtype=torch.float32)
