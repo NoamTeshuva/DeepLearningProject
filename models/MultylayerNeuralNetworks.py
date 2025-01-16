@@ -7,6 +7,8 @@ import sys
 import os
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+from sklearn.metrics import classification_report
 
 # Dynamically add the `data` folder to the system path
 current_path = os.getcwd()  # Current working directory
@@ -114,48 +116,103 @@ criterion = nn.CrossEntropyLoss()  # Cross-entropy loss for multi-class classifi
 optimizer = optim.SGD(model.parameters(), lr=0.001)
 
 
-# Training loop
-def train(model, loader, criterion, optimizer, epochs=10):
-    for epoch in range(epochs):
-        model.train()
-        total_loss = 0
-        for images, labels in loader:
-            optimizer.zero_grad()
-            outputs = model(images)
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
-            total_loss += loss.item()
-        avg_loss = total_loss / len(loader)
-        print(f"Epoch {epoch + 1}/{epochs}, Training Loss: {avg_loss:.4f}")
+# Initialize lists to track metrics
+train_losses = []
+train_accuracies = []
+val_losses = []
+val_accuracies = []
+num_epochs = 10
 
-
-# Validation loop
-def validate(model, loader, criterion):
-    model.eval()
-    total_loss = 0
+# Training loop with mini-batch processing
+for epoch in range(num_epochs):
+    epoch_loss = 0
     correct = 0
-    with torch.no_grad():
-        for images, labels in loader:
-            outputs = model(images)
-            loss = criterion(outputs, labels)
-            total_loss += loss.item()
-            predicted = torch.argmax(outputs, dim=1)
-            correct += (predicted == labels).sum().item()
-    avg_loss = total_loss / len(loader)
-    accuracy = correct / len(loader.dataset)
-    print(f"Validation Loss: {avg_loss:.4f}, Accuracy: {accuracy:.4f}")
+    total = 0
+
+    for batch_images, batch_labels in train_loader:
+        optimizer.zero_grad()
+        outputs = model(batch_images)
+        loss = criterion(outputs, batch_labels)
+        loss.backward()
+        optimizer.step()
+
+        epoch_loss += loss.item()
+        _, predicted = torch.max(outputs, 1)
+        correct += (predicted == batch_labels).sum().item()
+        total += batch_labels.size(0)
+
+    train_loss = epoch_loss / len(train_loader)
+    train_accuracy = correct / total
+    train_losses.append(train_loss)
+    train_accuracies.append(train_accuracy)
+
+    # Validation step
+    if use_validation:
+        val_loss = 0
+        val_correct = 0
+        val_total = 0
+        with torch.no_grad():
+            for val_images, val_labels in val_loader:
+                output = model(val_images)
+                loss = criterion(output, val_labels)
+                val_loss += loss.item()
+                _, predicted = torch.max(output, 1)
+                val_correct += (predicted == val_labels).sum().item()
+                val_total += val_labels.size(0)
+
+        val_loss /= len(val_loader)
+        val_accuracy = val_correct / val_total
+        val_losses.append(val_loss)
+        val_accuracies.append(val_accuracy)
+
+    print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {train_loss:.4f}, Train Acc: {train_accuracy:.4f}, "
+          f"Val Loss: {val_loss:.4f}, Val Acc: {val_accuracy:.4f}")
+# Plot the metrics
+plt.figure(figsize=(12, 6))
+
+# Loss plot
+plt.subplot(1, 2, 1)
+plt.plot(range(1, len(train_losses) + 1), train_losses, label='Train Loss')
+if val_losses:
+    plt.plot(range(1, len(val_losses) + 1), val_losses, label='Val Loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.title('Loss Over Epochs')
+plt.legend()
+plt.grid(True)
+
+# Accuracy plot
+plt.subplot(1, 2, 2)
+plt.plot(range(1, len(train_accuracies) + 1), train_accuracies, label='Train Accuracy')
+if val_accuracies:
+    plt.plot(range(1, len(val_accuracies) + 1), val_accuracies, label='Val Accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.title('Accuracy Over Epochs')
+plt.legend()
+plt.grid(True)
+
+plt.tight_layout()
+plt.show()
 
 
-# Train the model
-train(model, train_loader, criterion, optimizer, epochs=10)
+# Test loop
+test_correct = 0
+test_total = 0
+with torch.no_grad():
+    for test_images, test_labels in test_loader:
+        outputs = model(test_images)
+        _, test_predicted = torch.max(outputs, 1)
+        test_correct += (test_predicted == test_labels).sum().item()
+        test_total += test_labels.size(0)
 
-# Evaluate on validation set (if available)
-if use_validation and val_loader is not None:
-    validate(model, val_loader, criterion)
+test_accuracy = test_correct / test_total
+print(f"Test Accuracy: {test_accuracy:.4f}")
 
-# Evaluate on test set
-validate(model, test_loader, criterion)
+
+# Generate the classification report
+print("\nClassification Report:")
+print(classification_report(test_labels.long(), test_predicted.long()))
 
 # Save the trained model
 model_path = os.path.join(current_path, "notebooks", "simple_nn.pth")

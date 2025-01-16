@@ -3,19 +3,19 @@ import sys
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import torch.utils
 from torch.utils.data import Dataset, DataLoader
-import matplotlib.pyplot as plt
-from sklearn.metrics import classification_report
-import torch.utils.data
+from sklearn.metrics import classification_report, confusion_matrix
+import matplotlib.pyplot as plt  # Required for plotting
+from torchviz import make_dot
+import seaborn as sns
+from torchsummary import summary
 
 # Add the `data` folder to the system path
 current_path = os.getcwd()
 data_folder = os.path.join(current_path, "data")
 sys.path.append(data_folder)
 
-from data.prepare_data import preprocess_data_without_validation, preprocess_data_with_validation
-
+from data.prepare_data import preprocess_data_with_validation, preprocess_data_without_validation
 
 # Define the dataset path
 data_dir = os.path.join(data_folder, "Car-Bike-Dataset")
@@ -97,64 +97,91 @@ model = CNNClassifier()
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-# Initialize lists to track metrics
-train_losses = []
-train_accuracies = []
-val_losses = []
-val_accuracies = []
-num_epochs = 10
 
-# Training loop with mini-batch processing
-for epoch in range(num_epochs):
-    epoch_loss = 0
+# Metrics tracking
+train_losses = []
+val_losses = []
+train_accuracies = []
+val_accuracies = []
+
+def train(model, loader, criterion, optimizer, epochs=10):
+    for epoch in range(epochs):
+        model.train()
+        total_loss = 0
+        correct = 0
+        total = 0
+        for images, labels in loader:
+            optimizer.zero_grad()
+            outputs = model(images)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+            total_loss += loss.item()
+
+            # Accuracy calculation
+            _, predicted = torch.max(outputs, 1)
+            correct += (predicted == labels).sum().item()
+            total += labels.size(0)
+
+        avg_loss = total_loss / len(loader)
+        accuracy = correct / total
+        train_losses.append(avg_loss)
+        train_accuracies.append(accuracy)
+        print(f"Epoch {epoch + 1}/{epochs}, Training Loss: {avg_loss:.4f}, Accuracy: {accuracy:.4f}")
+
+def validate(model, loader, criterion):
+    model.eval()
+    total_loss = 0
     correct = 0
     total = 0
+    print("validation")
+    with torch.no_grad():
+        for images, labels in loader:
+            outputs = model(images)
+            loss = criterion(outputs, labels)
+            total_loss += loss.item()
 
-    for batch_images, batch_labels in train_loader:
-        optimizer.zero_grad()
-        outputs = model(batch_images)
-        loss = criterion(outputs, batch_labels)
-        loss.backward()
-        optimizer.step()
+            # Accuracy calculation
+            _, predicted = torch.max(outputs, 1)
+            correct += (predicted == labels).sum().item()
+            total += labels.size(0)
 
-        epoch_loss += loss.item()
-        _, predicted = torch.max(outputs, 1)
-        correct += (predicted == batch_labels).sum().item()
-        total += batch_labels.size(0)
+    avg_loss = total_loss / len(loader)
+    accuracy = correct / total
+    val_losses.append(avg_loss)
+    val_accuracies.append(accuracy)
+    print(f"Validation Loss: {avg_loss:.4f}, Accuracy: {accuracy:.4f}")
 
-    train_loss = epoch_loss / len(train_loader)
-    train_accuracy = correct / total
-    train_losses.append(train_loss)
-    train_accuracies.append(train_accuracy)
+# Train the model
+epochs = 10
+for epoch in range(epochs):
+    train(model, train_loader, criterion, optimizer, epochs=1)
+    if use_validation and val_loader is not None:
+        validate(model, val_loader, criterion)
 
-    # Validation step
-    if use_validation:
-        val_loss = 0
-        val_correct = 0
-        val_total = 0
-        with torch.no_grad():
-            for val_images, val_labels in val_loader:
-                output = model(val_images)
-                loss = criterion(output, val_labels)
-                val_loss += loss.item()
-                _, predicted = torch.max(output, 1)
-                val_correct += (predicted == val_labels).sum().item()
-                val_total += val_labels.size(0)
+# # Evaluate on test set
+# validate(model, test_loader, criterion)
 
-        val_loss /= len(val_loader)
-        val_accuracy = val_correct / val_total
-        val_losses.append(val_loss)
-        val_accuracies.append(val_accuracy)
+# Test loop
+test_correct = 0
+test_total = 0
+with torch.no_grad():
+    for test_images, test_labels in test_loader:
+        outputs = model(test_images)
+        _, test_predicted = torch.max(outputs, 1)
+        test_correct += (test_predicted == test_labels).sum().item()
+        test_total += test_labels.size(0)
 
-    print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {train_loss:.4f}, Train Acc: {train_accuracy:.4f}, "
-          f"Val Loss: {val_loss:.4f}, Val Acc: {val_accuracy:.4f}")
+test_accuracy = test_correct / test_total
+print(f"Test Accuracy: {test_accuracy:.4f}")
+
 # Plot the metrics
 plt.figure(figsize=(12, 6))
 
 # Loss plot
 plt.subplot(1, 2, 1)
 plt.plot(range(1, len(train_losses) + 1), train_losses, label='Train Loss')
-if val_losses:
+if use_validation and val_losses:
     plt.plot(range(1, len(val_losses) + 1), val_losses, label='Val Loss')
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
@@ -165,7 +192,7 @@ plt.grid(True)
 # Accuracy plot
 plt.subplot(1, 2, 2)
 plt.plot(range(1, len(train_accuracies) + 1), train_accuracies, label='Train Accuracy')
-if val_accuracies:
+if use_validation and val_accuracies:
     plt.plot(range(1, len(val_accuracies) + 1), val_accuracies, label='Val Accuracy')
 plt.xlabel('Epoch')
 plt.ylabel('Accuracy')
@@ -177,22 +204,20 @@ plt.tight_layout()
 plt.show()
 
 
-# Test loop
-test_correct = 0
-test_total = 0
-with torch.no_grad():
-    for test_images, test_labels in test_loader:
-        outputs = model(test_images)
-        _, predicted = torch.max(outputs, 1)
-        test_correct += (predicted == test_labels).sum().item()
-        test_total += test_labels.size(0)
+# Confusion Matrix
+cm = confusion_matrix(test_labels.cpu(), test_predicted.cpu())
 
-test_accuracy = test_correct / test_total
-print(f"Test Accuracy: {test_accuracy:.4f}")
+# Plot Confusion Matrix
+plt.figure(figsize=(8, 6))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['Car', 'Bike'], yticklabels=['Car', 'Bike'])
+plt.title('Confusion Matrix')
+plt.xlabel('Predicted')
+plt.ylabel('True')
+plt.show()
 
 # Generate the classification report
 print("\nClassification Report:")
-print(classification_report(test_labels.long(), predicted.long()))
+print(classification_report(test_labels.long(), test_predicted.long()))
 
 # Save the trained model
 model_path = os.path.join(current_path, "notebooks", "cnn_model.pth")
