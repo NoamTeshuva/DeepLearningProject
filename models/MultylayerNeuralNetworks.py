@@ -22,7 +22,7 @@ from data.prepare_data import preprocess_data_with_validation, preprocess_data_w
 data_dir = os.path.join(data_folder, "Car-Bike-Dataset")
 
 # Choose between preprocessing with or without validation
-use_validation = True  # Set to False if you do not need a validation set
+use_validation = False  # Set to False if you do not need a validation set
 
 if use_validation:
     train_images, val_images, test_images, train_labels, val_labels, test_labels = preprocess_data_with_validation('data\Car-Bike-Dataset')
@@ -53,8 +53,8 @@ else:
     test_images = scaler.transform(test_images)
     # Apply PCA to reduce dimensionality
     pca = PCA(n_components=50)  # Choose the number of components
-    train_images_pca = pca.fit_transform(train_images)
-    test_images_pca = pca.transform(test_images)
+    train_images = pca.fit_transform(train_images)
+    test_images = pca.transform(test_images)
     val_images, val_labels = None, None  # No validation set in this case
 
 # Convert data to PyTorch tensors
@@ -165,8 +165,8 @@ for epoch in range(num_epochs):
         val_losses.append(val_loss)
         val_accuracies.append(val_accuracy)
 
-    print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {train_loss:.4f}, Train Acc: {train_accuracy:.4f}, "
-          f"Val Loss: {val_loss:.4f}, Val Acc: {val_accuracy:.4f}")
+    if (epoch + 1) % 10 == 0:
+        print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}, accuracy: {train_accuracy:.4f}')
 # Plot the metrics
 plt.figure(figsize=(12, 6))
 
