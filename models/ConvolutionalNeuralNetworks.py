@@ -21,7 +21,7 @@ from data.prepare_data import preprocess_data_with_validation, preprocess_data_w
 data_dir = os.path.join(data_folder, "Car-Bike-Dataset")
 
 # Choose between preprocessing with or without validation
-use_validation = True
+use_validation = False
 
 if use_validation:
     train_images, val_images, test_images, train_labels, val_labels, test_labels = preprocess_data_with_validation(
@@ -134,7 +134,6 @@ def validate(model, loader, criterion):
     total_loss = 0
     correct = 0
     total = 0
-    print("validation")
     with torch.no_grad():
         for images, labels in loader:
             outputs = model(images)
