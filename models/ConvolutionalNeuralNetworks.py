@@ -5,10 +5,8 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 from sklearn.metrics import classification_report, confusion_matrix
-import matplotlib.pyplot as plt  # Required for plotting
-from torchviz import make_dot
+import matplotlib.pyplot as plt  
 import seaborn as sns
-from torchsummary import summary
 
 # Add the `data` folder to the system path
 current_path = os.getcwd()
@@ -21,7 +19,7 @@ from data.prepare_data import preprocess_data_with_validation, preprocess_data_w
 data_dir = os.path.join(data_folder, "Car-Bike-Dataset")
 
 # Choose between preprocessing with or without validation
-use_validation = False
+use_validation = True
 
 if use_validation:
     train_images, val_images, test_images, train_labels, val_labels, test_labels = preprocess_data_with_validation(
@@ -223,3 +221,4 @@ model_path = os.path.join(current_path, "notebooks", "cnn_model.pth")
 os.makedirs(os.path.dirname(model_path), exist_ok=True)
 torch.save(model.state_dict(), model_path)
 print(f"Model saved to {model_path}")
+
