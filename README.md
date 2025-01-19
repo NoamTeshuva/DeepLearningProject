@@ -21,3 +21,34 @@ The first step in this project is creating a baseline model. This model:
   - **Recall** (for "Bike"): 100%
 
 These results serve as a benchmark for more advanced models.
+
+### Logistic Regression
+run this code by these commands:
+1. `cd` to the existing repo directory.
+```sh
+cd ~/DeepLearningProject
+```
+2. Run file:
+```sh
+python -m models.LogisticRegression
+```
+### Fully Connected
+run this code by these commands:
+1. `cd` to the existing repo directory.
+```sh
+cd ~/DeepLearningProject
+```
+2. Run file:
+```sh
+python -m MultylayerNeuralNetworks
+```
+### CNN
+run this code by these commands:
+1. `cd` to the existing repo directory.
+```sh
+cd ~/DeepLearningProject
+```
+2. Run file:
+```sh
+python -m models.ConvolutionalNeuralNetworks
+```
