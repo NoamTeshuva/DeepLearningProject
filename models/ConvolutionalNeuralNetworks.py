@@ -19,7 +19,7 @@ from data.prepare_data import preprocess_data_with_validation, preprocess_data_w
 data_dir = os.path.join(data_folder, "Car-Bike-Dataset")
 
 # Choose between preprocessing with or without validation
-use_validation = True
+use_validation = False
 
 if use_validation:
     train_images, val_images, test_images, train_labels, val_labels, test_labels = preprocess_data_with_validation(
@@ -155,9 +155,6 @@ for epoch in range(epochs):
     train(model, train_loader, criterion, optimizer, epochs=1)
     if use_validation and val_loader is not None:
         validate(model, val_loader, criterion)
-
-# # Evaluate on test set
-# validate(model, test_loader, criterion)
 
 # Test loop
 test_correct = 0
