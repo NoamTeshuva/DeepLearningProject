@@ -28,7 +28,6 @@ Link to the Kaggle's Dataset: [Dataset](https://www.kaggle.com/datasets/utkarshs
 - It contains two subfolders:
   - `Car/` for car images
   - `Bike/` for bike images \
-
 The dataset is balanced, with an equal number of images in each class
 It consists 2000 images of bikes and 2000 images of cars, where bike is labeled as 0 and car is labeled as 1. \
 Firstly, we did preprocess on our raw data in order to ease the algorithms’ work and customize the data for our needs. \
@@ -45,10 +44,12 @@ The dataset is split at first as follows:
 - 80% training
 - 10% validation
 - 10% test \
+
 Since the hyper-parameters are not part of the optimization problem, we used the validation set to examine the performance obtained for different values of the hyper-parameters. \
 After the optimal hyper-parameters are set in place, the dataset is split once again from scratch into:
 - 80% training
 - 20% test \
+
 For several models such as: Logistic Regression and Fully connected neural network we have **flattened** the images into a 1D vector, **standardizes** each feature (pixel value) to have a mean of 0 and a standard deviation of 1 and used **PCA** to reduce the dimensionality of the feature space by projecting data onto a lower-dimensional space. \
 This data preparation pipeline ensured that the model was trained on clean, normalized, and augmented data, allowing it to generalize well to unseen data.
 
