@@ -15,14 +15,13 @@ current_path = os.getcwd()  # Current working directory
 data_folder = os.path.join(current_path, "data")  # Adjust the relative path to the data folder
 sys.path.append(data_folder)  # Add the data folder to the system path
 
-
 from data.prepare_data import preprocess_data_with_validation, preprocess_data_without_validation
 
 # Define the dataset path
 data_dir = os.path.join(data_folder, "Car-Bike-Dataset")
 
 # Choose between preprocessing with or without validation
-use_validation = True  # Set to False if you do not need a validation set
+use_validation = False  # Set to False if you do not need a validation set
 
 if use_validation:
     train_images, val_images, test_images, train_labels, val_labels, test_labels = preprocess_data_with_validation('data\Car-Bike-Dataset')
@@ -167,6 +166,7 @@ for epoch in range(num_epochs):
 
     if (epoch + 1) % 10 == 0:
         print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}, accuracy: {train_accuracy:.4f}')
+        
 # Plot the metrics
 plt.figure(figsize=(12, 6))
 
